@@ -27,33 +27,25 @@ var pokemondata []Pokemon
 // Encoder and Decoder types can be used for reading and writing to HTTP connections, WebSockets or files
 
 // The GetAPokemon returns the pokemon that matches requested ID to the front end
-// The GetAllPokemon returns all pokemon to the front end
 func GetAPokemon(w http.ResponseWriter, r *http.Request){
-  fmt.Println("in func GetAPokemon")
   params := mux.Vars(r) // using the mux library can get any parameters which were passed in with the request.
-  fmt.Printf("params are: %v", params)
   for _, item := range pokemondata { // loop over the global slice and look for any ids that match the id found in the request parameter
     if item.ID == params["id"] { // if a match is found...
       json.NewEncoder(w).Encode(item) // use the JSON encoder on it
       return
     }
   }
-  json.NewEncoder(w).Encode(&Pokemon{})
 }
 
-// Return all pokemons
+// The GetAllPokemon returns all pokemon to the front end
 func GetAllPokemons(w http.ResponseWriter, r *http.Request){
-  fmt.Println("in func GetAllPokemons")
   json.NewEncoder(w).Encode(pokemondata)
 }
 
 
-// add a new pokemon to saved pokemondata
+// AddNewPokemon adds a new pokemon to saved pokemondata
 func AddNewPokemon(w http.ResponseWriter, r *http.Request){
-  fmt.Println("in func AddNewPokemon")
   params := mux.Vars(r)
-  fmt.Println(params)
-  fmt.Println("params above")
   var newpokemon Pokemon
   _ = json.NewDecoder(r.Body).Decode(&newpokemon)
   newpokemon.ID = string(params["id"])
@@ -62,13 +54,10 @@ func AddNewPokemon(w http.ResponseWriter, r *http.Request){
 }
 
 func DeleteAPokemon(w http.ResponseWriter, r *http.Request){
-  fmt.Println("in func DeleteAPokemon")
   params := mux.Vars(r)
   for index, item := range pokemondata{
     if item.ID == params["id"]{
-      fmt.Printf("pokemondata before delete %s", pokemondata)
       pokemondata = append(pokemondata[:index], pokemondata[index+1:]...)
-      fmt.Printf("pokemondata after delete %s", pokemondata)
       break
     }
   }
@@ -78,11 +67,11 @@ func DeleteAPokemon(w http.ResponseWriter, r *http.Request){
 func main(){
 
   // add some default pokemons
-
   pokemondata = append(pokemondata, Pokemon{ID: "1", Name: "Lampent", Type: "Ghost/Fire", EvolvesFrom: "Litwick", EvolvesInto: "Chandelure"})
   pokemondata = append(pokemondata, Pokemon{ID: "2", Name: "Pikachu", Type: "Electric", EvolvesFrom: "Pichu", EvolvesInto: "Raichu"})
   pokemondata = append(pokemondata, Pokemon{ID: "3", Name: "Roselia", Type: "Grass/Poison", EvolvesFrom: "Budew", EvolvesInto: "Roserade"})
 
+  // set up a new Gorilla mux
   router := mux.NewRouter()
 
   router.HandleFunc("/pokemon/", GetAllPokemons).Methods("GET")
