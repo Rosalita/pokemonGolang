@@ -9,72 +9,99 @@ import(
   "fmt"
 )
 
-//data structures
-type Person struct {
-  ID          string    `json:"id,omitempty"` //omitempty param means that if property is null  it will be excluded from the JSON rather than showing as empty
-  Firstname   string    `json:"firstname, omitempty"`
-  Lastname    string    `json:"lastname, omitempty"`
-  Address     *Address  `json:"address, omitempty"` //nested json must be a pointer or omitempty will fail
+// Pokemon data structure
+type Pokemon struct {
+  ID            string    `json:"id"`
+  Name          string    `json:"name"`
+  Type          string    `json:"type"`
+  EvolvesFrom   string    `json:"evolvesfrom, omitempty"`
+  EvolvesInto   string    `json:"evolvesinto, omitempty"` //omitempty param means that if property is null  it will be excluded from the JSON rather than showing as empty`
 }
 
-type Address struct{
-  City       string   `json:"city, omitempty"`
-  State      string   `json:"state, omitempty"`
-}
 
-// instead of using a database this example usesa global variable (slice of type Person) to hold data used by app
-var people []Person
+// instead of using a database this example uses a global variable (slice of type Pokemon) to hold data used by app
+var pokemondata []Pokemon
 
 // The json package provides Decoder and Encoder types to support the common operation of readin and writing streams of JSON data.
 // The NewDecoder and NewEncoder functions wrap the io.Reader and io.Writer interface types
 // Encoder and Decoder types can be used for reading and writing to HTTP connections, WebSockets or files
 
-// The GetPeopleEndpoint is probably the easiest to understand because it returns all data to frontend.
-// The GetPersonEndpoing returns a full person variable to the frontend
-func GetPersonEndpoint(w http.ResponseWriter, r *http.Request){
+// The GetAPokemon returns the pokemon that matches requested ID to the front end
+// The GetAllPokemon returns all pokemon to the front end
+func GetAPokemon(w http.ResponseWriter, r *http.Request){
+  fmt.Println("in func GetAPokemon")
   params := mux.Vars(r) // using the mux library can get any parameters which were passed in with the request.
   fmt.Printf("params are: %v", params)
-  for _, item := range people { // loop over the global slice and look for any ids that match the id found in the request parameter
+  for _, item := range pokemondata { // loop over the global slice and look for any ids that match the id found in the request parameter
     if item.ID == params["id"] { // if a match is found...
       json.NewEncoder(w).Encode(item) // use the JSON encoder on it
       return
     }
   }
-  json.NewEncoder(w).Encode(&Person{})
+  json.NewEncoder(w).Encode(&Pokemon{})
 }
 
-// Return all people
-func GetPeopleEndpoint(w http.ResponseWriter, r *http.Request){
-  json.NewEncoder(w).Encode(people)
+// Return all pokemons
+func GetAllPokemons(w http.ResponseWriter, r *http.Request){
+  fmt.Println("in func GetAllPokemons")
+  json.NewEncoder(w).Encode(pokemondata)
 }
 
-func CreatePersonEndpoint(w http.ResponseWriter, r *http.Request){
+
+// add a new pokemon to saved pokemondata
+func AddNewPokemon(w http.ResponseWriter, r *http.Request){
+  fmt.Println("in func AddNewPokemon")
   params := mux.Vars(r)
-  var person Person
-  _ = json.NewDecoder(r.Body).Decode(&person)
-  person.ID = params["id"]
-  people = append(people, person)
-  json.NewEncoder(w).Encode(people)
+  fmt.Println(params)
+  fmt.Println("params above")
+  var newpokemon Pokemon
+  _ = json.NewDecoder(r.Body).Decode(&newpokemon)
+  newpokemon.ID = string(params["id"])
+  pokemondata = append(pokemondata, newpokemon)
+  json.NewEncoder(w).Encode(pokemondata)
 }
 
-func DeletePersonEndpoint(w http.ResponseWriter, r *http.Request){
+func DeleteAPokemon(w http.ResponseWriter, r *http.Request){
+  fmt.Println("in func DeleteAPokemon")
   params := mux.Vars(r)
-  for index, item := range people{
+  for index, item := range pokemondata{
     if item.ID == params["id"]{
-      people = append(people[:index], people[index+1:]...)
+      fmt.Printf("pokemondata before delete %s", pokemondata)
+      pokemondata = append(pokemondata[:index], pokemondata[index+1:]...)
+      fmt.Printf("pokemondata after delete %s", pokemondata)
       break
     }
   }
-  json.NewEncoder(w).Encode(people)
+  json.NewEncoder(w).Encode(pokemondata)
 }
 
 func main(){
+
+  // add some default pokemons
+
+  pokemondata = append(pokemondata, Pokemon{ID: "1", Name: "Lampent", Type: "Ghost/Fire", EvolvesFrom: "Litwick", EvolvesInto: "Chandelure"})
+  pokemondata = append(pokemondata, Pokemon{ID: "2", Name: "Pikachu", Type: "Electric", EvolvesFrom: "Pichu", EvolvesInto: "Raichu"})
+  pokemondata = append(pokemondata, Pokemon{ID: "3", Name: "Roselia", Type: "Grass/Poison", EvolvesFrom: "Budew", EvolvesInto: "Roserade"})
+
   router := mux.NewRouter()
-  people = append(people, Person{ID: "1", Firstname: "Rosie", Lastname: "Hamilton", Address: &Address{City: "Newcastle", State: "Tyne and Wear"} })
-  people = append(people, Person{ID: "2", Firstname: "Jane", Lastname: "Doe"})
-  router.HandleFunc("/people", GetPeopleEndpoint).Methods("GET")
-  router.HandleFunc("/people/{id}", GetPersonEndpoint).Methods("GET")
-  router.HandleFunc("/people/{id}", CreatePersonEndpoint).Methods("POST")
-  router.HandleFunc("/people/{id}", DeletePersonEndpoint).Methods("DELETE")
+
+  router.HandleFunc("/pokemon/", GetAllPokemons).Methods("GET")
+  router.HandleFunc("/pokemon/{id}", GetAPokemon).Methods("GET")
+  router.HandleFunc("/pokemon/{id}", AddNewPokemon).Methods("POST")
+  router.HandleFunc("/pokemon/{id}", DeleteAPokemon).Methods("DELETE")
   log.Fatal(http.ListenAndServe(":8080", router))
+
+// To view all pokemons
+// http://localhost:8080/pokemon/
+
+// To view a specific pokemon
+// http://localhost:8080/pokemon/2
+
+// To add a new pokemon from command line
+// curl -X POST -d '{"name":"Munchlax","type":"Normal","evolvesinto":"Snorlax"}' http://localhost:8080/pokemon/4
+
+// To delete an existing pokemon from command line
+//  curl -X DELETE http://localhost:8080/pokemon/4
+
+
 }
