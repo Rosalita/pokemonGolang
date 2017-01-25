@@ -6,7 +6,6 @@ import(
   "log"
   "net/http"
   "github.com/gorilla/mux" // a helper to make endpoints easier to create
-  "fmt"
 )
 
 // Pokemon data structure
