@@ -73,10 +73,11 @@ func main(){
   // set up a new Gorilla mux
   router := mux.NewRouter()
 
+  // Gorilla mux supports regex, d+ one or more digits
   router.HandleFunc("/pokemon/", GetAllPokemons).Methods("GET")
-  router.HandleFunc("/pokemon/{id}", GetAPokemon).Methods("GET")
-  router.HandleFunc("/pokemon/{id}", AddNewPokemon).Methods("POST")
-  router.HandleFunc("/pokemon/{id}", DeleteAPokemon).Methods("DELETE")
+  router.HandleFunc("/pokemon/{id:[0-9]+}", GetAPokemon).Methods("GET")
+  router.HandleFunc("/pokemon/{id:[0-9]+}", AddNewPokemon).Methods("POST")
+  router.HandleFunc("/pokemon/{id:[0-9]+}", DeleteAPokemon).Methods("DELETE")
   log.Fatal(http.ListenAndServe(":8080", router))
 
 // To view all pokemons
