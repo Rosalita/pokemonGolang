@@ -73,7 +73,7 @@ func main(){
   // set up a new Gorilla mux
   router := mux.NewRouter()
 
-  // Gorilla mux supports regex, d+ one or more digits
+  // Gorilla mux supports regex, [0-9]+ one or more 0 - 9 digits
   router.HandleFunc("/pokemon/", GetAllPokemons).Methods("GET")
   router.HandleFunc("/pokemon/{id:[0-9]+}", GetAPokemon).Methods("GET")
   router.HandleFunc("/pokemon/{id:[0-9]+}", AddNewPokemon).Methods("POST")
