@@ -45,6 +45,9 @@ func GetAPokemon(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+  // previous for loop has not found the pokemon
+	msg := fmt.Sprintf("404 Pokemon Not Found")
+  http.Error(w, msg, http.StatusNotFound)
 }
 
 // The GetAllPokemon returns all pokemon to the front end
